@@ -159,9 +159,9 @@ def game_thread():
 				if type(obj) == Bullet:
 					x = obj.x
 					y = obj.y
-					x += 1000
-					y += 1000
-					if x < MIN_X/5 or x > MAX_X/5 or y < MIN_Y/5 or y > MAX_Y/5:
+					x += BULLET_SPEED * math.cos(obj.theta)
+					y += BULLET_SPEED * math.sin(obj.theta)
+					if x < MIN_X/2 or x > MAX_X/2 or y < MIN_Y/2 or y > MAX_Y/2:
 						obj.destroy = True
 						#obj.offscreen = True
 						#DRAW.objects.pop(i)

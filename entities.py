@@ -98,7 +98,7 @@ class Bullet(Entity):
 
 		self.length = length
 		self.shotAngle = shotAngle
-		self.theta = 0
+		self.theta = shotAngle 
 
 	def produce(self):
 		"""
