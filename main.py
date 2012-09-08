@@ -24,7 +24,6 @@ Main Program
 """
 
 DRAW = None # Will be the global PointStream
-FIRING = False # XXX NASTY
 
 class Player(object):
 	"""
@@ -59,14 +58,13 @@ THREADS
 def dac_thread():
 	global PLAYERS, DRAW
 
-	ps = PointStream()
-	DRAW = ps
-
 	debug()
-
 
 	while True:
 		try:
+			ps = PointStream()
+			DRAW = ps
+
 			d = dac.DAC(dac.find_first_dac())
 			d.play_stream(ps)
 
@@ -88,7 +86,7 @@ def dac_thread():
 
 def joystick_thread():
 	"""Manage the joysticks with PyGame"""
-	global PLAYERS, FIRING
+	global PLAYERS
 
 	pygame.joystick.init()
 	pygame.display.init()
@@ -104,8 +102,6 @@ def joystick_thread():
 	PLAYERS.append(p1)
 
 	numButtons = p1.js.get_numbuttons() # XXX NO!
-
-	FIRING = False
 
 	while True:
 		e = pygame.event.get()
@@ -139,8 +135,7 @@ def joystick_thread():
 			# Firing the weapon
 			trigger = False if p.js.get_axis(5) in [0.0, -1.0] else True
 
-			if not FIRING and trigger:
-				FIRING = True
+			if trigger:
 				b = Bullet(p.obj.x, p.obj.y, shotAngle=p.obj.theta)
 				DRAW.objects.append(b)
 
@@ -148,7 +143,7 @@ def joystick_thread():
 
 
 def game_thread():
-	global DRAW, FIRING
+	global DRAW
 	while True:
 		print "Test"
 		print "GameThread objects: %d" % len(DRAW.objects)
@@ -162,11 +157,11 @@ def game_thread():
 					x += BULLET_SPEED * math.cos(obj.theta)
 					y += BULLET_SPEED * math.sin(obj.theta)
 					if x < MIN_X/2 or x > MAX_X/2 or y < MIN_Y/2 or y > MAX_Y/2:
+						print "DESTROY ME"
 						obj.destroy = True
 						#obj.offscreen = True
 						#DRAW.objects.pop(i)
 						#restart_game()
-						FIRING = False
 						continue
 					obj.x = x
 					obj.y = y

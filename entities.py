@@ -68,8 +68,8 @@ class Entity(object):
 		self.offscreen = False
 
 		# Cached first and last points. 
-		self.firstPt = 0
-		self.lastPt = 0
+		self.firstPt = (0, 0, 0, 0, 0)
+		self.lastPt = (0, 0, 0, 0, 0)
 
 	def produce(self):
 		self.lastPt = (0, 0, 0, 0, 0)

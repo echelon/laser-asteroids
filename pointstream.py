@@ -34,68 +34,87 @@ class PointStream(object):
 		that must occur between them.
 		"""
 		while True:
+			#print "POINT STREAM LOOP BEGIN"
+			curBall = None # XXX SCOPE HERE FOR DEBUG ONLY
+			nextBall = None # XXX SCOPE HERE FOR DEBUG ONLY
+			try:
 
-			# Generate and cache the first points of the objects.
-			# Necessary in order to slow down galvo tracking from 
-			# ball-to-ball as we move to the next object. 
+				# Generate and cache the first points of the objects.
+				# Necessary in order to slow down galvo tracking from 
+				# ball-to-ball as we move to the next object. 
 
-			for b in self.objects:
-				b.cacheFirstPt()
+				for b in self.objects:
+					b.cacheFirstPt()
 
-			# Objects to destroy at end of loop
-			destroy = []
+				# Objects to destroy at end of loop
+				destroy = []
 
-			# Draw all the objects... 
-			for i in range(len(self.objects)):
-				curBall = self.objects[i]
-				nextBall = self.objects[(i+1)%len(self.objects)]
+				# Draw all the objects... 
+				for i in range(len(self.objects)):
+					curBall = self.objects[i]
+					nextBall = self.objects[(i+1)%len(self.objects)]
 
-				# Cull the object if it is marked destroy
-				if curBall.destroy:
-					destroy.append(i)
-					continue
+					# Cull the object if it is marked destroy
+					if curBall.destroy:
+						destroy.append(i)
 
-				# Draw the ball
-				if not curBall.drawn:
-					yield curBall.firstPt # This was cached upfront
-					for x in curBall.produce():
-						yield x
+					# Draw the ball
+					if not curBall.drawn:
+						yield curBall.firstPt # This was cached upfront
+						for x in curBall.produce():
+							yield x
 
-				# Paint last pt for smoothness
-				# XXX: Remove?
-				for x in xrange(BLANK_SAMPLE_PTS):
-					yield curBall.firstPt
+					# Paint last pt for smoothness
+					# XXX: Remove?
+					for x in xrange(BLANK_SAMPLE_PTS):
+						yield curBall.firstPt
 
-				# Paint empty for smoothness
-				# XXX: Remove? 
-				for x in xrange(BLANK_SAMPLE_PTS):
-					yield (curBall.lastPt[0], curBall.lastPt[1], 0, 0, 0)
+					# Paint empty for smoothness
+					# XXX: Remove? 
+					for x in xrange(BLANK_SAMPLE_PTS):
+						yield (curBall.lastPt[0], curBall.lastPt[1], 0, 0, 0)
 
-				# Now, track to the next object. 
-				lastX = curBall.lastPt[0]
-				lastY = curBall.lastPt[1]
-				xDiff = curBall.lastPt[0] - nextBall.firstPt[0]
-				yDiff = curBall.lastPt[1] - nextBall.firstPt[1]
-				mv = BLANK_SAMPLE_PTS
-				for i in xrange(mv):
-					percent = i/float(mv)
-					xb = int(lastX - xDiff*percent)
-					yb = int(lastY - yDiff*percent)
-					# If we want to 'see' the tracking path. 
-					if SHOW_BLANKING_PATH: # FIXME: Rename 'tracking'
-						yield (xb, yb, 0, CMAX, 0)
-					else:
-						yield (xb, yb, 0, 0, 0)
+					# Now, track to the next object. 
+					lastX = curBall.lastPt[0]
+					lastY = curBall.lastPt[1]
+					xDiff = curBall.lastPt[0] - nextBall.firstPt[0]
+					yDiff = curBall.lastPt[1] - nextBall.firstPt[1]
+					mv = BLANK_SAMPLE_PTS
+					for i in xrange(mv):
+						percent = i/float(mv)
+						xb = int(lastX - xDiff*percent)
+						yb = int(lastY - yDiff*percent)
+						# If we want to 'see' the tracking path. 
+						if SHOW_BLANKING_PATH: # FIXME: Rename 'tracking'
+							yield (xb, yb, 0, CMAX, 0)
+						else:
+							yield (xb, yb, 0, 0, 0)
 
-			# Reset ball state (nasty hack for point caching)
-			for b in self.objects:
-				b.drawn = False
+				# Reset ball state (nasty hack for point caching)
+				for b in self.objects:
+					b.drawn = False
 
-			# Items to destroy
-			destroy.sort()
-			destroy.reverse()
-			for i in destroy:
-				self.objects.pop(i)
+				# Items to destroy
+				#print destroy
+				destroy.sort()
+				destroy.reverse()
+				for i in destroy:
+					self.objects.pop(i)
+
+			except Exception as e:
+				import sys, traceback
+				while True:
+					print curBall
+					print curBall.lastPt
+					print curBall.firstPt
+					print nextBall
+					print nextBall.lastPt
+					print nextBall.firstPt
+					print '\n---------------------'
+					print 'Exception: %s' % e
+					print '- - - - - - - - - - -'
+					traceback.print_tb(sys.exc_info()[2])
+					print "\n"
 
 	def read(self, n):
 		d = [self.stream.next() for i in xrange(n)]
