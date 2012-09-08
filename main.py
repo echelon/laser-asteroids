@@ -117,14 +117,12 @@ def joystick_thread():
 			rHori= p.js.get_axis(3)
 
 			if abs(rVert) > 0.2:
-				print "ADD VEL1"
 				y = p.obj.y
 				y += -1 * int(rVert * SIMPLE_TRANSLATION_SPD)
 				if MIN_Y < y < MAX_Y:
 					p.obj.y = y
 
 			if abs(rHori) > 0.2:
-				print "ADD VEL2"
 				x = p.obj.x
 				x += -1 * int(rHori * SIMPLE_TRANSLATION_SPD)
 				if MIN_X < x < MAX_X:
@@ -167,7 +165,7 @@ def game_thread():
 		DRAW.objects.append(e)
 
 	while True:
-		print "GameThread objects: %d" % len(DRAW.objects)
+		#print "GameThread objects: %d" % len(DRAW.objects)
 		try:
 
 			"""

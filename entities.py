@@ -24,41 +24,8 @@ class Entity(object):
 		self.g = g
 		self.b = b
 
-		# TODO
-		self.rotation = 0.0
-		self.velX = 0.0
-		self.velY = 0.0
-
-		# Cached first and last points. 
-		self.firstPt = 0
-		self.lastPt = 0
-
-	def produce(self):
-		self.lastPt = (0, 0, 0, 0, 0)
-		return self.lastPt
-
-	def cacheFirstPt(self):
-		"""
-		I need to cache the first point generated so that I can
-		slowly advance the galvos to the next object without starting
-		drawing.
-		"""
-		# XXX/FIXME: This is a hack (should I be using generators?)
-		for x in self.produce():
-			self.firstPt = x
-			break
-
-	"""
-	Just an attempt at an OO interface.
-	Nothing really fancy yet.
-	"""
-	def __init__(self, x = 0, y = 0, r = 0, g = 0, b = 0):
-		self.x = x
-		self.y = y
-
-		self.r = r
-		self.g = g
-		self.b = b
+		# Whether this object should experience blanking
+		self.doBlanking = True 
 
 		# TODO
 		self.rotation = 0.0
@@ -99,6 +66,9 @@ class Bullet(Entity):
 		self.length = length
 		self.shotAngle = shotAngle
 		self.theta = shotAngle 
+
+		# Override blanking
+		self.doBlanking = BULLET_DO_BLANKING
 
 	def produce(self):
 		"""
@@ -239,6 +209,7 @@ class Ship(Entity):
 
 		self.theta = 0
 
+
 	def produce(self):
 		"""
 		Generate the points of the circle.
@@ -288,31 +259,31 @@ class Ship(Entity):
 
 		p = None # Save in scope
 
-		for p in make_line(pts[0], pts[1], SQUARE_EDGE_SAMPLE_PTS):
+		for p in make_line(pts[0], pts[1], SHIP_EDGE_SAMPLE_PTS):
 			break
-		for i in range(int(round(SQUARE_VERTEX_SAMPLE_PTS/2.0))):
+		for i in range(int(round(SHIP_VERTEX_SAMPLE_PTS/2.0))):
 			yield p
-		for p in make_line(pts[0], pts[1], SQUARE_EDGE_SAMPLE_PTS):
+		for p in make_line(pts[0], pts[1], SHIP_EDGE_SAMPLE_PTS):
 			yield p
-		for i in range(SQUARE_VERTEX_SAMPLE_PTS):
+		for i in range(SHIP_VERTEX_SAMPLE_PTS):
 			yield p
-		for p in make_line(pts[1], pts[2], SQUARE_EDGE_SAMPLE_PTS):
+		for p in make_line(pts[1], pts[2], SHIP_EDGE_SAMPLE_PTS):
 			yield p
-		for i in range(SQUARE_VERTEX_SAMPLE_PTS):
+		for i in range(SHIP_VERTEX_SAMPLE_PTS):
 			yield p
-		for p in make_line(pts[2], pts[3], SQUARE_EDGE_SAMPLE_PTS):
+		for p in make_line(pts[2], pts[3], SHIP_EDGE_SAMPLE_PTS):
 			yield p
-		for i in range(SQUARE_VERTEX_SAMPLE_PTS):
+		for i in range(SHIP_VERTEX_SAMPLE_PTS):
 			yield p
-		for p in make_line(pts[3], pts[4], SQUARE_EDGE_SAMPLE_PTS):
+		for p in make_line(pts[3], pts[4], SHIP_EDGE_SAMPLE_PTS):
 			yield p
-		for i in range(SQUARE_VERTEX_SAMPLE_PTS):
+		for i in range(SHIP_VERTEX_SAMPLE_PTS):
 			yield p
 
-		for p in make_line(pts[4], pts[0], SQUARE_EDGE_SAMPLE_PTS):
+		for p in make_line(pts[4], pts[0], SHIP_EDGE_SAMPLE_PTS):
 			self.lastPt = p # KEEP BOTH
 			yield p
-		for i in range(int(round(SQUARE_VERTEX_SAMPLE_PTS/2.0))):
+		for i in range(int(round(SHIP_VERTEX_SAMPLE_PTS/2.0))):
 			self.lastPt = p # KEEP BOTH
 			yield p
 

@@ -4,7 +4,7 @@ PointStream -- The main galvo multiple object drawing algorithm.
 			   It will need to be improved for efficiency.
 
 	FIXME/NOTE: The documentation / variable names are a bit out of date.
-				"Ball" means object.
+				"Ball", where it occurs, means "entity object".
 """
 
 import math
@@ -17,6 +17,7 @@ import pygame
 
 # GLOBALS 
 from globalvals import *
+from entities import *
 
 class PointStream(object):
 	def __init__(self):
@@ -35,8 +36,8 @@ class PointStream(object):
 		"""
 		while True:
 			#print "POINT STREAM LOOP BEGIN"
-			curBall = None # XXX SCOPE HERE FOR DEBUG ONLY
-			nextBall = None # XXX SCOPE HERE FOR DEBUG ONLY
+			curObj = None # XXX SCOPE HERE FOR DEBUG ONLY
+			nextObj = None # XXX SCOPE HERE FOR DEBUG ONLY
 			try:
 
 				# Generate and cache the first points of the objects.
@@ -51,41 +52,62 @@ class PointStream(object):
 
 				# Draw all the objects... 
 				for i in range(len(self.objects)):
-					curBall = self.objects[i]
-					nextBall = self.objects[(i+1)%len(self.objects)]
+					curObj = self.objects[i]
+					nextObj = self.objects[(i+1)%len(self.objects)]
 
-					# Cull the object if it is marked destroy
-					if curBall.destroy:
+					# Prepare to cull object if it is marked destroy
+					if curObj.destroy:
 						destroy.append(i)
 
+					# Blanking (on the way in), if set
+					if curObj.doBlanking:
+						p = curObj.firstPt
+						p = (p[0], p[1], 0, 0, 0)
+						for x in range(BLANK_SAMPLE_PTS):
+							yield p
+
 					# Draw the ball
-					if not curBall.drawn:
-						yield curBall.firstPt # This was cached upfront
-						for x in curBall.produce():
+					if not curObj.drawn:
+						yield curObj.firstPt # This was cached upfront
+						for x in curObj.produce():
 							yield x
 
-					# Paint last pt for smoothness
-					# XXX: Remove?
-					for x in xrange(BLANK_SAMPLE_PTS):
-						yield curBall.firstPt
+					"""
+					# XXX: BULLET SPECIFIC -- Remove?
+					if type(curObj) == Bullet:
+						# Paint last pt for smoothness
+						# XXX: Remove?
+						for x in xrange(BLANK_SAMPLE_PTS):
+							yield curObj.firstPt
 
-					# Paint empty for smoothness
-					# XXX: Remove? 
-					for x in xrange(BLANK_SAMPLE_PTS):
-						yield (curBall.lastPt[0], curBall.lastPt[1], 0, 0, 0)
+						# Paint empty for smoothness
+						# XXX: Remove? 
+						for x in xrange(BLANK_SAMPLE_PTS):
+							yield (curObj.lastPt[0], curObj.lastPt[1],
+									0, 0, 0)
+					"""
+
+					# Blanking (on the way out), if set
+					if curObj.doBlanking:
+						p = curObj.lastPt
+						p = (p[0], p[1], 0, 0, 0)
+						for x in range(BLANK_SAMPLE_PTS):
+							yield p
+
 
 					# Now, track to the next object. 
-					lastX = curBall.lastPt[0]
-					lastY = curBall.lastPt[1]
-					xDiff = curBall.lastPt[0] - nextBall.firstPt[0]
-					yDiff = curBall.lastPt[1] - nextBall.firstPt[1]
-					mv = BLANK_SAMPLE_PTS
+					lastX = curObj.lastPt[0]
+					lastY = curObj.lastPt[1]
+					xDiff = curObj.lastPt[0] - nextObj.firstPt[0]
+					yDiff = curObj.lastPt[1] - nextObj.firstPt[1]
+
+					mv = TRACKING_SAMPLE_PTS
 					for i in xrange(mv):
 						percent = i/float(mv)
 						xb = int(lastX - xDiff*percent)
 						yb = int(lastY - yDiff*percent)
-						# If we want to 'see' the tracking path. 
-						if SHOW_BLANKING_PATH: # FIXME: Rename 'tracking'
+						# If we want to 'see' the tracking path (debug)
+						if SHOW_TRACKING_PATH:
 							yield (xb, yb, 0, CMAX, 0)
 						else:
 							yield (xb, yb, 0, 0, 0)
@@ -104,17 +126,10 @@ class PointStream(object):
 			except Exception as e:
 				import sys, traceback
 				while True:
-					print curBall
-					print curBall.lastPt
-					print curBall.firstPt
-					print nextBall
-					print nextBall.lastPt
-					print nextBall.firstPt
 					print '\n---------------------'
-					print 'Exception: %s' % e
-					print '- - - - - - - - - - -'
+					print 'PointStream Exception: %s' % e
 					traceback.print_tb(sys.exc_info()[2])
-					print "\n"
+					print "---------------------\n"
 
 	def read(self, n):
 		d = [self.stream.next() for i in xrange(n)]
