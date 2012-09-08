@@ -64,6 +64,8 @@ class Entity(object):
 		self.rotation = 0.0
 		self.velX = 0.0
 		self.velY = 0.0
+		self.destroy = False
+		self.offscreen = False
 
 		# Cached first and last points. 
 		self.firstPt = 0
@@ -85,7 +87,9 @@ class Entity(object):
 			break
 
 class Bullet(Entity):
-	def __init__(self, x = 0, y = 0, r = 0, g = 0, b = 0, angle=0, length=1000):
+	def __init__(self, x = 0, y = 0, r = CMAX, g = CMAX, b = CMAX, 
+				shotAngle=0, length=8000):
+
 		super(Bullet, self).__init__(x, y, r, g, b)
 		self.drawn = False
 
@@ -93,7 +97,8 @@ class Bullet(Entity):
 		self.pauseLast = True
 
 		self.length = length
-		self.angle = angle
+		self.shotAngle = shotAngle
+		self.theta = 0
 
 	def produce(self):
 		"""
@@ -101,28 +106,28 @@ class Bullet(Entity):
 		"""
 		r, g, b = (0, 0, 0)
 
-		# Generate points
-		ed = self.radius/2
-
 		pts = []
-		pts.append({'x': ed, 'y': ed})
-		pts.append({'x': -ed, 'y': ed})
+		pts.append({'x': 0, 'y': 0})
+		pts.append({'x': self.length*math.cos(self.shotAngle),
+					'y': self.length*math.sin(self.shotAngle)})
 
+		"""
 		# Rotate points
 		for p in pts:
 			x = p['x']
 			y = p['y']
 			p['x'] = x*math.cos(self.theta) - y*math.sin(self.theta)
 			p['y'] = y*math.cos(self.theta) + x*math.sin(self.theta)
+		"""
 
 		# Translate points
 		for pt in pts:
 			pt['x'] += self.x
 			pt['y'] += self.y
 
-		r = 0 if not self.r else int(CMAX / LASER_POWER_DENOM)
-		g = 0 if not self.g or LASER_POWER_DENOM > 4 else CMAX
-		b = 0 if not self.b else int(CMAX / LASER_POWER_DENOM)
+		r = 0 if not self.r else int(self.r / LASER_POWER_DENOM)
+		g = 0 if not self.g or LASER_POWER_DENOM > 4 else self.g
+		b = 0 if not self.b else int(self.b / LASER_POWER_DENOM)
 
 		def make_line(pt1, pt2, steps=200):
 			xdiff = pt1['x'] - pt2['x']
@@ -135,21 +140,11 @@ class Bullet(Entity):
 				line.append((x, y, r, g, b)) # XXX FIX COLORS
 			return line
 
-		for p in make_line(pts[0], pts[1], SQUARE_EDGE_SAMPLE_PTS):
-			yield p
-
-		for p in make_line(pts[1], pts[2], SQUARE_EDGE_SAMPLE_PTS):
-			yield p
-
-		for p in make_line(pts[2], pts[3], SQUARE_EDGE_SAMPLE_PTS):
-			yield p
-
-		for p in make_line(pts[3], pts[0], SQUARE_EDGE_SAMPLE_PTS):
-			self.lastPt = p
+		for p in make_line(pts[0], pts[1], BULLET_EDGE_SAMPLE_PTS):
+			self.lastPt = p # XXX super important
 			yield p
 
 		self.drawn = True
-
 
 class Square(Entity):
 	def __init__(self, x = 0, y = 0, r = 0, g = 0, b = 0, radius = 1200):
@@ -192,10 +187,6 @@ class Square(Entity):
 		r = 0 if not self.r else int(self.r / LASER_POWER_DENOM)
 		g = 0 if not self.g or LASER_POWER_DENOM > 4 else self.g
 		b = 0 if not self.b else int(self.b / LASER_POWER_DENOM)
-
-		print '-----'
-		print self.r, self.g, self.b
-		print r, g, b
 
 		def make_line(pt1, pt2, steps=200):
 			xdiff = pt1['x'] - pt2['x']

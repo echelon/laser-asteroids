@@ -16,7 +16,7 @@ from daclib import dac
 from daclib.common import *
 from globalvals import *
 from colors import *
-from entities import Entity, Square
+from entities import *
 from pointstream import PointStream
 
 """
@@ -24,6 +24,7 @@ Main Program
 """
 
 DRAW = None # Will be the global PointStream
+FIRING = False # XXX NASTY
 
 class Player(object):
 	"""
@@ -61,6 +62,9 @@ def dac_thread():
 	ps = PointStream()
 	DRAW = ps
 
+	debug()
+
+
 	while True:
 		try:
 			d = dac.DAC(dac.find_first_dac())
@@ -84,7 +88,7 @@ def dac_thread():
 
 def joystick_thread():
 	"""Manage the joysticks with PyGame"""
-	global PLAYERS
+	global PLAYERS, FIRING
 
 	pygame.joystick.init()
 	pygame.display.init()
@@ -100,6 +104,8 @@ def joystick_thread():
 	PLAYERS.append(p1)
 
 	numButtons = p1.js.get_numbuttons() # XXX NO!
+
+	FIRING = False
 
 	while True:
 		e = pygame.event.get()
@@ -126,17 +132,72 @@ def joystick_thread():
 				if MIN_X < x < MAX_X:
 					p.obj.x = x
 
+			# Player rotation
 			t = math.atan2(lVert, lHori)
-			print t
-
-			# TESTING STUFF
 			p.obj.theta = t
 
+			# Firing the weapon
+			trigger = False if p.js.get_axis(5) in [0.0, -1.0] else True
+
+			if not FIRING and trigger:
+				FIRING = True
+				b = Bullet(p.obj.x, p.obj.y, shotAngle=p.obj.theta)
+				DRAW.objects.append(b)
 
 		time.sleep(0.02) # Keep this thread from hogging CPU
 
-thread.start_new_thread(joystick_thread, ())
+
+def game_thread():
+	global DRAW, FIRING
+	while True:
+		print "Test"
+		print "GameThread objects: %d" % len(DRAW.objects)
+		try:
+			# BULLETS
+			for i in range(len(DRAW.objects)):
+				obj = DRAW.objects[i]
+				if type(obj) == Bullet:
+					x = obj.x
+					y = obj.y
+					x += 1000
+					y += 1000
+					if x < MIN_X/5 or x > MAX_X/5 or y < MIN_Y/5 or y > MAX_Y/5:
+						obj.destroy = True
+						#obj.offscreen = True
+						#DRAW.objects.pop(i)
+						#restart_game()
+						FIRING = False
+						continue
+					obj.x = x
+					obj.y = y
+
+			time.sleep(0.02)
+
+		except:
+			print "GAME EXCEPTION"*100
+			#restart_game()
+			time.sleep(0.02)
+
 thread.start_new_thread(dac_thread, ())
+thread.start_new_thread(game_thread, ())
+thread.start_new_thread(joystick_thread, ())
+
+def restart_game():
+	global DRAW
+	#DRAW.objects = DRAW.objects[0:1]
+	for i in range(len(DRAW.objects)):
+		if i == 0:
+			continue
+		DRAW.objects.pop(i)
+	for obj in DRAW.objects:
+		obj.x = 0
+		obj.y = 0
+
+def debug():
+	#b = Bullet(1000, 1000, r=CMAX, g=CMAX)
+	#DRAW.objects.append(b) 
+	pass
+
 
 while True:
 	time.sleep(200)

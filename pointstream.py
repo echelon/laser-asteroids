@@ -42,10 +42,18 @@ class PointStream(object):
 			for b in self.objects:
 				b.cacheFirstPt()
 
+			# Objects to destroy at end of loop
+			destroy = []
+
 			# Draw all the objects... 
 			for i in range(len(self.objects)):
 				curBall = self.objects[i]
 				nextBall = self.objects[(i+1)%len(self.objects)]
+
+				# Cull the object if it is marked destroy
+				if curBall.destroy:
+					destroy.append(i)
+					continue
 
 				# Draw the ball
 				if not curBall.drawn:
@@ -82,6 +90,12 @@ class PointStream(object):
 			# Reset ball state (nasty hack for point caching)
 			for b in self.objects:
 				b.drawn = False
+
+			# Items to destroy
+			destroy.sort()
+			destroy.reverse()
+			for i in destroy:
+				self.objects.pop(i)
 
 	def read(self, n):
 		d = [self.stream.next() for i in xrange(n)]
