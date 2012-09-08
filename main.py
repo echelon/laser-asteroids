@@ -24,6 +24,7 @@ Main Program
 """
 
 DRAW = None # Will be the global PointStream
+bulletSpawnOk = True
 
 class Player(object):
 	"""
@@ -45,7 +46,7 @@ class Player(object):
 		print numButtons
 
 		# Player Object
-		self.obj = Square(0, 0, r=rgb[0], g=rgb[1], b=rgb[2], radius=radius)
+		self.obj = Ship(0, 0, r=rgb[0], g=rgb[1], b=rgb[2], radius=radius/2)
 		DRAW.objects.append(self.obj)
 
 	def __str__(self):
@@ -87,6 +88,7 @@ def dac_thread():
 def joystick_thread():
 	"""Manage the joysticks with PyGame"""
 	global PLAYERS
+	global bulletSpawnOk
 
 	pygame.joystick.init()
 	pygame.display.init()
@@ -132,10 +134,10 @@ def joystick_thread():
 			t = math.atan2(lVert, lHori)
 			p.obj.theta = t
 
-			# Firing the weapon
-			trigger = False if p.js.get_axis(5) in [0.0, -1.0] else True
+			# Firing the weapon (Left Trigger)
+			trigger = False if p.js.get_axis(2) in [0.0, -1.0] else True
 
-			if trigger:
+			if bulletSpawnOk and trigger:
 				ang = p.obj.theta + math.pi
 				b = Bullet(p.obj.x, p.obj.y, rgb=COLOR_YELLOW, shotAngle=ang)
 				DRAW.objects.append(b)
@@ -143,10 +145,14 @@ def joystick_thread():
 		time.sleep(0.02) # Keep this thread from hogging CPU
 
 
-NUM_ENEMIES = 0 # XXX: MOve to game state object... 
+numEnemies = 0 # XXX: MOve to game state object... 
+numBullets = 0 # XXX: MOve to game state object... 
 
 def game_thread():
-	global DRAW, NUM_ENEMIES
+	global DRAW
+	global numEnemies
+	global numBullets
+	global bulletSpawnOk
 
 	def spawn_enemy():
 		x = random.randint(ENEMY_SPAWN_MIN_X, ENEMY_SPAWN_MAX_X)
@@ -159,7 +165,6 @@ def game_thread():
 		e.velY = yVel
 
 		DRAW.objects.append(e)
-		NUM_ENEMIES+=1
 
 	while True:
 		print "GameThread objects: %d" % len(DRAW.objects)
@@ -168,9 +173,16 @@ def game_thread():
 			"""
 			Game Events
 			"""
-			if random.randint(0, 5) == 0 and NUM_ENEMIES <= 10:
-				print "NEW ENEMY"
+			if numEnemies < MAX_NUM_ENEMIES and random.randint(0, 5) == 0:
 				spawn_enemy()
+
+			if numBullets < MAX_NUM_BULLETS:
+				bulletSpawnOk = True
+			else:
+				bulletSpawnOk = False
+
+			numEnemies = 0
+			numBullets = 0
 
 			"""
 			Handle Onscreen Objects
@@ -179,11 +191,13 @@ def game_thread():
 				obj = DRAW.objects[i]
 
 				# PLAYER
-				if type(obj) == Square:
+				if type(obj) == Ship:
 					continue
 
 				# BULLETS
 				elif type(obj) == Bullet:
+					# XXX Recounted each iter due to terrible design 
+					numBullets += 1
 					x = obj.x
 					y = obj.y
 					x += BULLET_SPEED * math.cos(obj.theta)
@@ -195,7 +209,8 @@ def game_thread():
 					obj.y = y
 
 				elif type(obj) == Enemy:
-					pass
+					# XXX Recounted each iter due to terrible design 
+					numEnemies += 1
 					x = obj.x
 					y = obj.y
 					x += obj.velX

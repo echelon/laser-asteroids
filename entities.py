@@ -228,9 +228,9 @@ class Enemy(Entity):
 
 		self.drawn = True
 
-class Square(Entity):
+class Ship(Entity):
 	def __init__(self, x = 0, y = 0, r = 0, g = 0, b = 0, radius = 1200):
-		super(Square, self).__init__(x, y, r, g, b)
+		super(Ship, self).__init__(x, y, r, g, b)
 		self.radius = radius
 		self.drawn = False
 
@@ -251,6 +251,9 @@ class Square(Entity):
 		pts = []
 		pts.append({'x': ed, 'y': ed})
 		pts.append({'x': -ed, 'y': ed})
+
+		pts.append({'x': -ed-ed*2, 'y': 0})
+
 		pts.append({'x': -ed, 'y': -ed})
 		pts.append({'x': ed, 'y': -ed})
 
@@ -301,7 +304,12 @@ class Square(Entity):
 			yield p
 		for i in range(SQUARE_VERTEX_SAMPLE_PTS):
 			yield p
-		for p in make_line(pts[3], pts[0], SQUARE_EDGE_SAMPLE_PTS):
+		for p in make_line(pts[3], pts[4], SQUARE_EDGE_SAMPLE_PTS):
+			yield p
+		for i in range(SQUARE_VERTEX_SAMPLE_PTS):
+			yield p
+
+		for p in make_line(pts[4], pts[0], SQUARE_EDGE_SAMPLE_PTS):
 			self.lastPt = p # KEEP BOTH
 			yield p
 		for i in range(int(round(SQUARE_VERTEX_SAMPLE_PTS/2.0))):
@@ -315,5 +323,5 @@ if __name__ == '__main__':
 
 	a = Ball()
 	a.produce()
-	b = Square()
+	b = Ship()
 
