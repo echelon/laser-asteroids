@@ -15,6 +15,7 @@ import pygame
 from daclib import dac
 from daclib.common import *
 from globalvals import *
+from colors import *
 from entities import Entity, Square
 from pointstream import PointStream
 
@@ -87,16 +88,16 @@ def joystick_thread():
 
 	pygame.joystick.init()
 	pygame.display.init()
-	
+
 	if not pygame.joystick.get_count():
 		print "No Joystick detected!"
 		sys.exit()
 
-	p1 = Player(pygame.joystick.Joystick(0))
-	#p2 = Player(pygame.joystick.Joystick(1))
+	p1 = Player(pygame.joystick.Joystick(0),
+			rgb = COLOR_PINK)
+
 
 	PLAYERS.append(p1)
-	#PLAYERS.append(p2)
 
 	numButtons = p1.js.get_numbuttons() # XXX NO!
 
@@ -105,29 +106,31 @@ def joystick_thread():
 
 		for p in PLAYERS:
 
-			vel1 = p.js.get_axis(4) # Right joystick
-			vel2 = p.js.get_axis(3)
+			# Joysticks 
+			lVert = p.js.get_axis(1)
+			lHori= p.js.get_axis(0)
+			rVert = p.js.get_axis(4)
+			rHori= p.js.get_axis(3)
 
-			print "Velocities: %f, %f" % (vel1, vel2)
-
-			if abs(vel1) > 0.2:
+			if abs(rVert) > 0.2:
 				print "ADD VEL1"
 				y = p.obj.y
-				y += -1 * int(vel1 * SIMPLE_TRANSLATION_SPD)
+				y += -1 * int(rVert * SIMPLE_TRANSLATION_SPD)
 				if MIN_Y < y < MAX_Y:
 					p.obj.y = y
 
-			if abs(vel2) > 0.2:
+			if abs(rHori) > 0.2:
 				print "ADD VEL2"
 				x = p.obj.x
-				x += -1 * int(vel2 * SIMPLE_TRANSLATION_SPD)
+				x += -1 * int(rHori * SIMPLE_TRANSLATION_SPD)
 				if MIN_X < x < MAX_X:
 					p.obj.x = x
 
+			t = math.atan2(lVert, lHori)
+			print t
+
 			# TESTING STUFF
-			theta = p.js.get_axis(2) # Left trigger
-			print theta
-			p.obj.theta = theta
+			p.obj.theta = t
 
 
 		time.sleep(0.02) # Keep this thread from hogging CPU
