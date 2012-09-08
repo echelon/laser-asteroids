@@ -136,35 +136,76 @@ def joystick_thread():
 			trigger = False if p.js.get_axis(5) in [0.0, -1.0] else True
 
 			if trigger:
-				b = Bullet(p.obj.x, p.obj.y, shotAngle=p.obj.theta)
+				ang = p.obj.theta + math.pi
+				b = Bullet(p.obj.x, p.obj.y, rgb=COLOR_YELLOW, shotAngle=ang)
 				DRAW.objects.append(b)
 
 		time.sleep(0.02) # Keep this thread from hogging CPU
 
 
+NUM_ENEMIES = 0 # XXX: MOve to game state object... 
+
 def game_thread():
-	global DRAW
+	global DRAW, NUM_ENEMIES
+
+	def spawn_enemy():
+		x = random.randint(ENEMY_SPAWN_MIN_X, ENEMY_SPAWN_MAX_X)
+		y = random.randint(ENEMY_SPAWN_MIN_Y, ENEMY_SPAWN_MAX_Y)
+		xVel = random.randint(ENEMY_SPAWN_MIN_X_VEL, ENEMY_SPAWN_MAX_X_VEL)
+		yVel = random.randint(ENEMY_SPAWN_MIN_X_VEL, ENEMY_SPAWN_MAX_X_VEL)
+
+		e = Enemy(x, y, r=CMAX, g=CMAX, b=CMAX, radius=1200)
+		e.velX = xVel
+		e.velY = yVel
+
+		DRAW.objects.append(e)
+		NUM_ENEMIES+=1
+
 	while True:
-		print "Test"
 		print "GameThread objects: %d" % len(DRAW.objects)
 		try:
-			# BULLETS
+
+			"""
+			Game Events
+			"""
+			if random.randint(0, 5) == 0 and NUM_ENEMIES <= 10:
+				print "NEW ENEMY"
+				spawn_enemy()
+
+			"""
+			Handle Onscreen Objects
+			"""
 			for i in range(len(DRAW.objects)):
 				obj = DRAW.objects[i]
-				if type(obj) == Bullet:
+
+				# PLAYER
+				if type(obj) == Square:
+					continue
+
+				# BULLETS
+				elif type(obj) == Bullet:
 					x = obj.x
 					y = obj.y
 					x += BULLET_SPEED * math.cos(obj.theta)
 					y += BULLET_SPEED * math.sin(obj.theta)
-					if x < MIN_X/2 or x > MAX_X/2 or y < MIN_Y/2 or y > MAX_Y/2:
-						print "DESTROY ME"
+					if x < MIN_X or x > MAX_X or y < MIN_Y or y > MAX_Y :
 						obj.destroy = True
-						#obj.offscreen = True
-						#DRAW.objects.pop(i)
-						#restart_game()
 						continue
 					obj.x = x
 					obj.y = y
+
+				elif type(obj) == Enemy:
+					pass
+					x = obj.x
+					y = obj.y
+					x += obj.velX
+					y += obj.velY
+					if x < MIN_X or x > MAX_X or y < MIN_Y or y > MAX_Y :
+						obj.destroy = True
+						continue
+					obj.x = x
+					obj.y = y
+
 
 			time.sleep(0.02)
 
@@ -176,6 +217,10 @@ def game_thread():
 thread.start_new_thread(dac_thread, ())
 thread.start_new_thread(game_thread, ())
 thread.start_new_thread(joystick_thread, ())
+
+"""
+UNUSED STUFF
+"""
 
 def restart_game():
 	global DRAW
