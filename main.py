@@ -38,24 +38,14 @@ class Player(object):
 		# Joystick
 		joystick.init()
 
-		# Laser
-		self.obj = Square(0, 0, r=rgb[0], g=rgb[1], b=rgb[2], radius=radius)
-
-		print self.obj
-		print self.obj
-		print self.obj
-		print self.obj
-		print self.obj
-		print self.obj
-		print self.obj
-
-		DRAW.objects.append(self.obj)
-
-		print joystick.get_name()
-
+		# debug
 		numButtons = joystick.get_numbuttons()
+		print joystick.get_name()
 		print numButtons
 
+		# Player Object
+		self.obj = Square(0, 0, r=rgb[0], g=rgb[1], b=rgb[2], radius=radius)
+		DRAW.objects.append(self.obj)
 
 	def __str__(self):
 		return self.js.get_name()
@@ -115,8 +105,8 @@ def joystick_thread():
 
 		for p in PLAYERS:
 
-			vel1 = p.js.get_axis(1) # Left joystick
-			vel2 = p.js.get_axis(0)
+			vel1 = p.js.get_axis(4) # Right joystick
+			vel2 = p.js.get_axis(3)
 
 			print "Velocities: %f, %f" % (vel1, vel2)
 
@@ -133,6 +123,12 @@ def joystick_thread():
 				x += -1 * int(vel2 * SIMPLE_TRANSLATION_SPD)
 				if MIN_X < x < MAX_X:
 					p.obj.x = x
+
+			# TESTING STUFF
+			theta = p.js.get_axis(2) # Left trigger
+			print theta
+			p.obj.theta = theta
+
 
 		time.sleep(0.02) # Keep this thread from hogging CPU
 
