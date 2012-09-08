@@ -1,31 +1,5 @@
 #!/usr/bin/env python
 
-"""
-A simple game of Pong with PS3 controllers.
-
-	PS3 Mappings
-	------------
-	Axis 0	- Left horiontal (-1 is up, 1 is down)
-	Axis 1	- Left vertical
-	Axis 2	- Right horizontal 
-	Axis 3	- Right vertical 
-
-	Button 4	- Up
-	Button 5	- Right
-	Button 6	- Down
-	Button 7	- Left
-
-	Button 12	- Triangle
-	Button 13	- Circle
-	Button 14	- X
-	Button 15	- Square 
-
-	Button 16	- PS Button
-
-Use qtsixa to pair controllers, then sixad to start the bluetooth 
-daemon.
-"""
-
 # STDLIB
 import math
 import random
@@ -42,104 +16,13 @@ from daclib import dac
 from daclib.common import *
 from globalvals import *
 from entities import Entity, Square
-
-class PointStream(object):
-	def __init__(self):
-		self.called = False
-		self.stream = self.produce()
-
-	def produce(self):
-		"""
-		This infinite loop functions as an infinite point generator.
-		It generates points for both balls as well as the "blanking"
-		that must occur between them.
-		"""
-		while True: 
-
-			# Generate and cache the first points of the objects.
-			# Necessary in order to slow down galvo tracking from 
-			# ball-to-ball as we move to the next object. 
-
-			for b in balls:
-				b.cacheFirstPt()
-
-			# Draw all the balls... 
-			for i in range(len(balls)):
-				curBall = balls[i]
-				nextBall = balls[(i+1)%len(balls)]
-
-				# Draw the ball
-				if not curBall.drawn:
-					yield curBall.firstPt # This was cached upfront
-					for x in curBall.produce():
-						yield x
-
-				# Paint last pt for smoothness
-				# XXX: Remove?
-				for x in xrange(BLANK_SAMPLE_PTS):
-					yield curBall.firstPt
-
-				# Paint empty for smoothness
-				# XXX: Remove? 
-				for x in xrange(BLANK_SAMPLE_PTS):
-					yield (curBall.lastPt[0], curBall.lastPt[1], 0, 0, 0)
-
-				# Now, track to the next object. 
-				lastX = curBall.lastPt[0]
-				lastY = curBall.lastPt[1]
-				xDiff = curBall.lastPt[0] - nextBall.firstPt[0]
-				yDiff = curBall.lastPt[1] - nextBall.firstPt[1]
-				mv = BLANK_SAMPLE_PTS
-				for i in xrange(mv): 
-					percent = i/float(mv)
-					xb = int(lastX - xDiff*percent)
-					yb = int(lastY - yDiff*percent)
-					# If we want to 'see' the tracking path. 
-					if SHOW_BLANKING_PATH: # FIXME: Rename 'tracking'
-						yield (xb, yb, 0, CMAX, 0)
-					else:
-						yield (xb, yb, 0, 0, 0)
-
-			# Reset ball state (nasty hack for point caching)
-			for b in balls:
-				b.drawn = False
-
-
-
-	def read(self, n):
-		d = [self.stream.next() for i in xrange(n)]
-		return d
+from pointstream import PointStream
 
 """
 Main Program
 """
 
-ps = PointStream()
-
-def dac_thread():
-	global PLAYERS
-
-	while True:
-		try:
-			d = dac.DAC(dac.find_first_dac())
-			d.play_stream(ps)
-
-		except Exception as e:
-
-			import sys, traceback
-			print '\n---------------------'
-			print 'Exception: %s' % e
-			print '- - - - - - - - - - -'
-			traceback.print_tb(sys.exc_info()[2])
-			print "\n"
-			pass
-
-			# In case we went off edge, recenter. 
-			# XXX: This is just laziness
-			for p in PLAYERS:
-				p.obj.x = 0
-				p.obj.y = 0
-
+DRAW = None # Will be the global PointStream
 
 class Player(object):
 	"""
@@ -166,7 +49,7 @@ class Player(object):
 		print self.obj
 		print self.obj
 
-		balls.append(self.obj)
+		DRAW.objects.append(self.obj)
 
 		print joystick.get_name()
 
@@ -178,8 +61,36 @@ class Player(object):
 		return self.js.get_name()
 
 """
-Global objects
+THREADS
 """
+
+def dac_thread():
+	global PLAYERS, DRAW
+
+	ps = PointStream()
+	DRAW = ps
+
+	while True:
+		try:
+			d = dac.DAC(dac.find_first_dac())
+			d.play_stream(ps)
+
+		except Exception as e:
+
+			import sys, traceback
+			print '\n---------------------'
+			print 'Exception: %s' % e
+			print '- - - - - - - - - - -'
+			traceback.print_tb(sys.exc_info()[2])
+			print "\n"
+			pass
+
+			# In case we went off edge, recenter. 
+			# XXX: This is just laziness
+			for p in PLAYERS:
+				p.obj.x = 0
+				p.obj.y = 0
+
 def joystick_thread():
 	"""Manage the joysticks with PyGame"""
 	global PLAYERS
@@ -225,11 +136,10 @@ def joystick_thread():
 
 		time.sleep(0.02) # Keep this thread from hogging CPU
 
-
 thread.start_new_thread(joystick_thread, ())
 thread.start_new_thread(dac_thread, ())
 
 while True:
-	time.sleep(20)
+	time.sleep(200)
 
 
