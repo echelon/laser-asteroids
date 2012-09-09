@@ -64,7 +64,7 @@ class Player(object):
 		print numButtons
 
 		# Player Object
-		self.obj = Ship(0, 0, r=rgb[0], g=rgb[1], b=rgb[2], radius=radius/2)
+		self.obj = Ship(0, 0, r=rgb[0], g=rgb[1], b=rgb[2], radius=SHIP_SIZE)
 		self.healthbar = HealthBar(0, 0, r=0, g=CMAX, b=0, radius=radius/2)
 
 		DRAW.objects.append(self.obj)
@@ -193,17 +193,20 @@ def game_thread():
 
 	def spawn_enemy():
 		x, y, xVel, yVel = (0, 0, 0, 0)
-		spawnType = random.randint(0, 4)
+		spawnType = random.randint(0, 7)
 
+		"""
+		SPAWN LOCATION -- corners and edges
+		"""
 		if spawnType == 0:
-			# TOP LEFT
+			# TOP RIGHT
 			x = MIN_X
 			y = MAX_Y
 			xVel = random.randint(ASTEROID_VEL_MAG_MIN, ASTEROID_VEL_MAG_MAX)
 			yVel = -random.randint(ASTEROID_VEL_MAG_MIN, ASTEROID_VEL_MAG_MAX)
 
 		elif spawnType == 1:
-			# BOTTOM LEFT
+			# BOTTOM RIGHT
 			x = MIN_X
 			y = MIN_Y
 			xVel = random.randint(ASTEROID_VEL_MAG_MIN, ASTEROID_VEL_MAG_MAX)
@@ -223,8 +226,39 @@ def game_thread():
 			xVel = -random.randint(ASTEROID_VEL_MAG_MIN, ASTEROID_VEL_MAG_MAX)
 			yVel = -random.randint(ASTEROID_VEL_MAG_MIN, ASTEROID_VEL_MAG_MAX)
 
+		elif spawnType == 4:
+			# TOP EDGE
+			x = random.randint(MIN_X, MAX_X)
+			y = MAX_Y
+			xVel = random.randint(ASTEROID_VEL_MAG_MIN, ASTEROID_VEL_MAG_MAX)
+			xVel *= 1 if random.randint(0, 1) else -1
+			yVel = -random.randint(ASTEROID_VEL_MAG_MIN, ASTEROID_VEL_MAG_MAX)
 
 		elif spawnType == 5:
+			# RIGHT EDGE
+			x = MIN_X
+			y = random.randint(MIN_Y, MAX_Y)
+			xVel = random.randint(ASTEROID_VEL_MAG_MIN, ASTEROID_VEL_MAG_MAX)
+			yVel = random.randint(ASTEROID_VEL_MAG_MIN, ASTEROID_VEL_MAG_MAX)
+			yVel *= 1 if random.randint(0, 1) else -1
+
+		elif spawnType == 6:
+			# BOTTOM EDGE
+			x = random.randint(MIN_X, MAX_X)
+			y = MIN_Y
+			xVel = random.randint(ASTEROID_VEL_MAG_MIN, ASTEROID_VEL_MAG_MAX)
+			xVel *= 1 if random.randint(0, 1) else -1
+			yVel = random.randint(ASTEROID_VEL_MAG_MIN, ASTEROID_VEL_MAG_MAX)
+
+		elif spawnType == 7:
+			# LEFT EDGE
+			x = MAX_X
+			y = random.randint(MIN_Y, MAX_Y)
+			xVel = -random.randint(ASTEROID_VEL_MAG_MIN, ASTEROID_VEL_MAG_MAX)
+			yVel = random.randint(ASTEROID_VEL_MAG_MIN, ASTEROID_VEL_MAG_MAX)
+			yVel *= 1 if random.randint(0, 1) else -1
+
+		elif spawnType == 1000:
 			# Random location
 			x = random.randint(ENEMY_SPAWN_MIN_X, ENEMY_SPAWN_MAX_X)
 			y = random.randint(ENEMY_SPAWN_MIN_Y, ENEMY_SPAWN_MAX_Y)
