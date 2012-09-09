@@ -1,5 +1,5 @@
 """
-Enemy Asteroid class
+Asteroid class
 	TODO: DOC
 """
 
@@ -18,9 +18,9 @@ from globalvals import *
 # Base class
 from entity import Entity
 
-class Enemy(Entity):
+class Asteroid(Entity):
 	def __init__(self, x = 0, y = 0, r = 0, g = 0, b = 0, radius = 8200):
-		super(Enemy, self).__init__(x, y, r, g, b)
+		super(Asteroid, self).__init__(x, y, r, g, b)
 		self.drawn = False
 
 		self.pauseFirst = True

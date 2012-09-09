@@ -20,7 +20,7 @@ from colors import *
 from entities.ship import *
 from entities.healthbar import *
 from entities.asteroid import *
-from entities.asteroidExplode import *
+from entities.particle import *
 from entities.bullet import *
 from pointstream import PointStream
 
@@ -191,9 +191,9 @@ def game_thread():
 		yVel = random.randint(ENEMY_SPAWN_MIN_X_VEL, ENEMY_SPAWN_MAX_X_VEL)
 		radius = random.randint(ENEMY_MIN_RADIUS, ENEMY_MAX_RADIUS)
 
-		e = Enemy(x, y, r=CMAX, g=CMAX, b=0, radius=radius)
-		e.velX = xVel
-		e.velY = yVel
+		e = Asteroid(x, y, r=CMAX, g=CMAX, b=0, radius=radius)
+		e.xVel = xVel
+		e.yVel = yVel
 		e.thetaRate = random.uniform(-math.pi/100, math.pi/100)
 
 		DRAW.objects.append(e)
@@ -211,15 +211,13 @@ def game_thread():
 			particles.append(p)
 			DRAW.objects.append(p)
 
-
 	while True:
-		#print "GameThread objects: %d" % len(DRAW.objects)
 		try:
 
 			"""
 			Game Events
 			"""
-			if numEnemies < MAX_NUM_ENEMIES: # and random.randint(0, 5) == 0:
+			if numEnemies < MAX_NUM_ENEMIES and random.randint(0, 5) == 0:
 				spawn_enemy()
 
 			if numBullets < MAX_NUM_BULLETS:
@@ -239,7 +237,7 @@ def game_thread():
 			particles = []
 
 			for obj in DRAW.objects:
-				if type(obj) == Enemy:
+				if type(obj) == Asteroid:
 					enemies.append(obj)
 				elif type(obj) == Particle:
 					particles.append(obj)
@@ -256,14 +254,14 @@ def game_thread():
 						b.destroy = True
 						spawn_particles(e.x, e.y)
 
-			"""
-			checkCollision = DRAW.objects[:]
-			while len(checkCollision) > 1:
-				a = checkCollision.pop(0)
-				for b in checkCollision:
-					if a.collides(b):
-						print "COLLIDES"
-			"""
+			# Player-enemy collisions
+			for e in enemies:
+				if e.destroy:
+					continue
+				if e.checkCollide(ship):
+					e.destroy = True
+					spawn_particles(e.x, e.y)
+
 
 			numEnemies = 0
 			numBullets = 0
@@ -292,13 +290,13 @@ def game_thread():
 					obj.x = x
 					obj.y = y
 
-				elif type(obj) == Enemy:
+				elif type(obj) == Asteroid:
 					# XXX Recounted each iter due to terrible design 
 					numEnemies += 1
 					x = obj.x
 					y = obj.y
-					x += obj.velX
-					y += obj.velY
+					x += obj.xVel
+					y += obj.yVel
 					if x < MIN_X or x > MAX_X or y < MIN_Y or y > MAX_Y :
 						obj.destroy = True
 						continue

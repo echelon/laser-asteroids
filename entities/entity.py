@@ -31,9 +31,9 @@ class Entity(object):
 		# Positioning stuff
 		self.x = x
 		self.y = y
+		self.xVel = 0.0
+		self.yVel = 0.0
 		self.rotation = 0.0
-		self.velX = 0.0
-		self.velY = 0.0
 
 		# Drawing specifics 
 		self.r = r
