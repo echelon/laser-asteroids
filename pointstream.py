@@ -55,6 +55,10 @@ class PointStream(object):
 					curObj = self.objects[i]
 					nextObj = self.objects[(i+1)%len(self.objects)]
 
+					# Skip draw?
+					if curObj.skipDraw:
+						continue
+
 					# Prepare to cull object if it is marked destroy
 					if curObj.destroy:
 						destroy.append(i)
@@ -93,7 +97,6 @@ class PointStream(object):
 						p = (p[0], p[1], 0, 0, 0)
 						for x in range(BLANK_SAMPLE_PTS):
 							yield p
-
 
 					# Now, track to the next object. 
 					lastX = curObj.lastPt[0]

@@ -27,7 +27,7 @@ class Particle(Entity):
 		self.pauseLast = True
 
 		# Particle Duration
-		self.life = 20
+		self.life = random.randint(PARTICLE_LIFE_MIN, PARTICLE_LIFE_MAX)
 		self.xVel = 0
 		self.yVel = 0
 

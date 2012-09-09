@@ -166,7 +166,7 @@ def joystick_thread():
 				td = timedelta(milliseconds=150) # TODO: Cache this.
 				if datetime.now() > bulletLastFired + td:
 					ang = p.obj.theta + math.pi
-					b = Bullet(p.obj.x, p.obj.y, rgb=COLOR_YELLOW, shotAngle=ang)
+					b = Bullet(p.obj.x, p.obj.y, rgb=COLOR_BLUE, shotAngle=ang)
 					DRAW.objects.append(b)
 					STATE.bullets.append(b)
 					bulletLastFired = datetime.now()
@@ -189,13 +189,28 @@ def game_thread():
 		y = random.randint(ENEMY_SPAWN_MIN_Y, ENEMY_SPAWN_MAX_Y)
 		xVel = random.randint(ENEMY_SPAWN_MIN_X_VEL, ENEMY_SPAWN_MAX_X_VEL)
 		yVel = random.randint(ENEMY_SPAWN_MIN_X_VEL, ENEMY_SPAWN_MAX_X_VEL)
+		radius = random.randint(ENEMY_MIN_RADIUS, ENEMY_MAX_RADIUS)
 
-		e = Enemy(x, y, r=CMAX, g=CMAX, b=CMAX, radius=1200)
+		e = Enemy(x, y, r=CMAX, g=CMAX, b=0, radius=radius)
 		e.velX = xVel
 		e.velY = yVel
+		e.thetaRate = random.uniform(-math.pi/100, math.pi/100)
 
 		DRAW.objects.append(e)
 		STATE.asteroids.append(e)
+
+	def spawn_particles(x, y):
+		np = random.randint(PARTICLE_SPAWN_MIN,
+							PARTICLE_SPAWN_MAX)
+		for i in range(np):
+			p = Particle(x, y, CMAX, CMAX, CMAX)
+			p.xVel = random.randint(PARTICLE_MIN_X_VEL,
+									PARTICLE_MAX_X_VEL)
+			p.yVel = random.randint(PARTICLE_MIN_Y_VEL,
+									PARTICLE_MAX_Y_VEL)
+			particles.append(p)
+			DRAW.objects.append(p)
+
 
 	while True:
 		#print "GameThread objects: %d" % len(DRAW.objects)
@@ -238,15 +253,8 @@ def game_thread():
 				for e in enemies:
 					if e.checkCollide(b):
 						e.destroy = True
-						print "COLLIDE"
-						# Spawn explosion particles
-						for i in range(random.randint(3, 6)):
-							p = Particle(e.x, e.y, CMAX, CMAX, CMAX)
-							p.xVel = random.randint(-1000, 1000)
-							p.yVel = random.randint(-1000, 1000)
-							particles.append(p)
-							DRAW.objects.append(p)
-
+						b.destroy = True
+						spawn_particles(e.x, e.y)
 
 			"""
 			checkCollision = DRAW.objects[:]
@@ -296,6 +304,7 @@ def game_thread():
 						continue
 					obj.x = x
 					obj.y = y
+					obj.theta += obj.thetaRate
 
 				elif type(obj) == Particle:
 					x = obj.x

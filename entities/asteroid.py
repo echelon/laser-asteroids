@@ -21,15 +21,16 @@ from entity import Entity
 class Enemy(Entity):
 	def __init__(self, x = 0, y = 0, r = 0, g = 0, b = 0, radius = 8200):
 		super(Enemy, self).__init__(x, y, r, g, b)
-		self.radius = radius
 		self.drawn = False
 
 		self.pauseFirst = True
 		self.pauseLast = True
 
 		self.theta = 0
+		self.thetaRate = 0
 
-
+		self.radius = radius
+		self.collisionRadius = radius
 
 	def produce(self):
 		"""
@@ -38,7 +39,7 @@ class Enemy(Entity):
 		r, g, b = (0, 0, 0)
 
 		# Generate points
-		ed = self.radius*2
+		ed = self.radius
 
 		pts = []
 		pts.append({'x': ed, 'y': ed})
