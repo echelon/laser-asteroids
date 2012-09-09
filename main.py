@@ -16,7 +16,10 @@ from daclib import dac
 from daclib.common import *
 from globalvals import *
 from colors import *
-from entities import *
+from entities.ship import *
+from entities.healthbar import *
+from entities.asteroid import *
+from entities.bullet import *
 from pointstream import PointStream
 
 """
@@ -25,6 +28,19 @@ Main Program
 
 DRAW = None # Will be the global PointStream
 bulletSpawnOk = True
+
+class GameState(object):
+	"""
+	A simple structure to keep track of 'global' game state.
+	"""
+	def __init__(self):
+		# Objects
+		self.ship = None
+		self.healthbar = None
+		self.bullets = []
+		self.asteroids = []
+
+STATE = GameState()
 
 class Player(object):
 	"""
@@ -47,7 +63,14 @@ class Player(object):
 
 		# Player Object
 		self.obj = Ship(0, 0, r=rgb[0], g=rgb[1], b=rgb[2], radius=radius/2)
+		self.healthbar = HealthBar(HEALTHBAR_X_POS, HEALTHBAR_Y_POS,
+				r=0, g=CMAX, b=0, radius=radius/2)
+
 		DRAW.objects.append(self.obj)
+		DRAW.objects.append(self.healthbar)
+
+		STATE.ship = self.obj
+		STATE.healthbar = self.healthbar
 
 	def __str__(self):
 		return self.js.get_name()
@@ -58,8 +81,6 @@ THREADS
 
 def dac_thread():
 	global PLAYERS, DRAW
-
-	debug()
 
 	while True:
 		try:
@@ -139,6 +160,7 @@ def joystick_thread():
 				ang = p.obj.theta + math.pi
 				b = Bullet(p.obj.x, p.obj.y, rgb=COLOR_YELLOW, shotAngle=ang)
 				DRAW.objects.append(b)
+				STATE.bullets.append(b)
 
 		time.sleep(0.02) # Keep this thread from hogging CPU
 
@@ -148,6 +170,7 @@ numBullets = 0 # XXX: MOve to game state object...
 
 def game_thread():
 	global DRAW
+	global STATE
 	global numEnemies
 	global numBullets
 	global bulletSpawnOk
@@ -163,6 +186,7 @@ def game_thread():
 		e.velY = yVel
 
 		DRAW.objects.append(e)
+		STATE.asteroids.append(e)
 
 	while True:
 		#print "GameThread objects: %d" % len(DRAW.objects)
@@ -171,13 +195,47 @@ def game_thread():
 			"""
 			Game Events
 			"""
-			if numEnemies < MAX_NUM_ENEMIES and random.randint(0, 5) == 0:
+			if numEnemies < MAX_NUM_ENEMIES: # and random.randint(0, 5) == 0:
 				spawn_enemy()
 
 			if numBullets < MAX_NUM_BULLETS:
 				bulletSpawnOk = True
 			else:
 				bulletSpawnOk = False
+
+
+			"""
+			Collision Detection
+			"""
+			# Populate lists
+			# TODO: Let's not have to continually rebuild these
+			ship = None
+			bullets = []
+			enemies = []
+
+			for obj in DRAW.objects:
+				if type(obj) == Enemy:
+					enemies.append(obj)
+				elif type(obj) == Bullet:
+					bullets.append(obj)
+				elif type(obj) == Ship:
+					ship = obj
+
+			# Bullet-enemy collisions
+			for b in bullets:
+				for e in enemies:
+					if e.checkCollide(b):
+						e.destroy = True
+						print "COLLIDE"
+
+			"""
+			checkCollision = DRAW.objects[:]
+			while len(checkCollision) > 1:
+				a = checkCollision.pop(0)
+				for b in checkCollision:
+					if a.collides(b):
+						print "COLLIDES"
+			"""
 
 			numEnemies = 0
 			numBullets = 0
@@ -222,9 +280,12 @@ def game_thread():
 
 			time.sleep(0.02)
 
-		except:
-			print "GAME EXCEPTION"*100
-			#restart_game()
+		except Exception as e:
+			import sys, traceback
+			print '\n---------------------'
+			print 'GAME Exception: %s' % e
+			traceback.print_tb(sys.exc_info()[2])
+			print "---------------------\n"
 			time.sleep(0.02)
 
 thread.start_new_thread(dac_thread, ())
@@ -234,23 +295,6 @@ thread.start_new_thread(joystick_thread, ())
 """
 UNUSED STUFF
 """
-
-def restart_game():
-	global DRAW
-	#DRAW.objects = DRAW.objects[0:1]
-	for i in range(len(DRAW.objects)):
-		if i == 0:
-			continue
-		DRAW.objects.pop(i)
-	for obj in DRAW.objects:
-		obj.x = 0
-		obj.y = 0
-
-def debug():
-	#b = Bullet(1000, 1000, r=CMAX, g=CMAX)
-	#DRAW.objects.append(b) 
-	pass
-
 
 while True:
 	time.sleep(200)

@@ -41,8 +41,8 @@ class PointStream(object):
 			try:
 
 				# Generate and cache the first points of the objects.
-				# Necessary in order to slow down galvo tracking from 
-				# ball-to-ball as we move to the next object. 
+				# Necessary in order to slow down galvo tracking as we
+				# move to the next object. 
 
 				for b in self.objects:
 					b.cacheFirstPt()
@@ -66,7 +66,7 @@ class PointStream(object):
 						for x in range(BLANK_SAMPLE_PTS):
 							yield p
 
-					# Draw the ball
+					# Draw the object
 					if not curObj.drawn:
 						yield curObj.firstPt # This was cached upfront
 						for x in curObj.produce():
@@ -112,7 +112,7 @@ class PointStream(object):
 						else:
 							yield (xb, yb, 0, 0, 0)
 
-				# Reset ball state (nasty hack for point caching)
+				# Reset object state (nasty hack for point caching)
 				for b in self.objects:
 					b.drawn = False
 
