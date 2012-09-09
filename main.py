@@ -130,6 +130,10 @@ def joystick_thread():
 	numButtons = p1.js.get_numbuttons() # XXX NO!
 	bulletLastFired = datetime.now()
 
+	# Bullet color increment
+	colors = [COLOR_GREEN, COLOR_RED, COLOR_BLUE, COLOR_YELLOW]
+	ci = 0
+
 	while True:
 		e = pygame.event.get()
 
@@ -173,7 +177,10 @@ def joystick_thread():
 				td = timedelta(milliseconds=150) # TODO: Cache this.
 				if datetime.now() > bulletLastFired + td:
 					ang = p.obj.theta + math.pi
-					b = Bullet(p.obj.x, p.obj.y, rgb=COLOR_BLUE, shotAngle=ang)
+
+					ci = (ci+1) % len(colors)
+					color = colors[ci]
+					b = Bullet(p.obj.x, p.obj.y, rgb=color, shotAngle=ang)
 					DRAW.objects.append(b)
 					STATE.bullets.append(b)
 					bulletLastFired = datetime.now()
@@ -257,15 +264,6 @@ def game_thread():
 			xVel = -random.randint(ASTEROID_VEL_MAG_MIN, ASTEROID_VEL_MAG_MAX)
 			yVel = random.randint(ASTEROID_VEL_MAG_MIN, ASTEROID_VEL_MAG_MAX)
 			yVel *= 1 if random.randint(0, 1) else -1
-
-		elif spawnType == 1000:
-			# Random location
-			x = random.randint(ENEMY_SPAWN_MIN_X, ENEMY_SPAWN_MAX_X)
-			y = random.randint(ENEMY_SPAWN_MIN_Y, ENEMY_SPAWN_MAX_Y)
-			xVel = random.randint(ENEMY_SPAWN_MIN_X_VEL, ENEMY_SPAWN_MAX_X_VEL)
-			yVel = random.randint(ENEMY_SPAWN_MIN_X_VEL, ENEMY_SPAWN_MAX_X_VEL)
-		else:
-			return
 
 		radius = random.randint(ASTEROID_MIN_RADIUS, ASTEROID_MAX_RADIUS)
 
