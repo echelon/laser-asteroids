@@ -1,4 +1,12 @@
 #!/usr/bin/env python
+"""
+Asteroids-inspired laser projector game for the Ether Dream DAC.
+
+Copyright (c) 2012
+Brandon Thomas <echelon@gmail.com>
+http://possibilistic.org
+https://github.com/echelon
+"""
 
 # STDLIB
 import math
