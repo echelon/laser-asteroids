@@ -19,6 +19,9 @@ from globalvals import *
 from entity import Entity
 
 class Asteroid(Entity):
+
+	HEALTH_MAX = ASTEROID_HEALTH_MAX
+
 	def __init__(self, x = 0, y = 0, r = 0, g = 0, b = 0, radius = 8200):
 		super(Asteroid, self).__init__(x, y, r, g, b)
 		self.drawn = False
@@ -31,6 +34,11 @@ class Asteroid(Entity):
 
 		self.radius = radius
 		self.collisionRadius = radius
+
+		self.health = Asteroid.HEALTH_MAX
+
+	def subtract(self, health):
+		self.health = max(self.health - health, 0)
 
 	def produce(self):
 		"""

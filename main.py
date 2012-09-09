@@ -337,9 +337,11 @@ def game_thread():
 			for b in bullets:
 				for e in enemies:
 					if e.checkCollide(b) and not e.destroy:
-						e.destroy = True
 						b.destroy = True
-						spawn_particles(e.x, e.y)
+						e.subtract(ASTEROID_HEALTH_BULLET_HIT)
+						if e.health <= 0:
+							e.destroy = True
+							spawn_particles(e.x, e.y)
 
 			# Player-enemy collisions
 			# XXX/FIXME -- nesting hell! ahhh! cleanup, cleanup!
