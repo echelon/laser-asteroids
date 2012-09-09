@@ -122,6 +122,8 @@ def joystick_thread():
 	p1 = Player(pygame.joystick.Joystick(0),
 			rgb = COLOR_PINK)
 
+	p1.obj.x = (MIN_X + MAX_X) /2
+	p1.obj.y = (MAX_Y - MIN_Y) /2
 
 	PLAYERS.append(p1)
 
@@ -160,7 +162,12 @@ def joystick_thread():
 			STATE.healthbar.y = p.obj.y - 2500
 
 			# Firing the weapon (Left Trigger)
-			trigger = False if p.js.get_axis(2) in [0.0, -1.0] else True
+			tOff = [0.0, -1.0]
+			trigger = True
+			if p.js.get_axis(2) in tOff and p.js.get_axis(5) in tOff:
+				trigger = False
+
+			#trigger = False if p.js.get_axis(2) in [0.0, -1.0] else True
 
 			if bulletSpawnOk and trigger:
 				td = timedelta(milliseconds=150) # TODO: Cache this.
@@ -185,11 +192,48 @@ def game_thread():
 	global bulletSpawnOk
 
 	def spawn_enemy():
-		x = random.randint(ENEMY_SPAWN_MIN_X, ENEMY_SPAWN_MAX_X)
-		y = random.randint(ENEMY_SPAWN_MIN_Y, ENEMY_SPAWN_MAX_Y)
-		xVel = random.randint(ENEMY_SPAWN_MIN_X_VEL, ENEMY_SPAWN_MAX_X_VEL)
-		yVel = random.randint(ENEMY_SPAWN_MIN_X_VEL, ENEMY_SPAWN_MAX_X_VEL)
-		radius = random.randint(ENEMY_MIN_RADIUS, ENEMY_MAX_RADIUS)
+		x, y, xVel, yVel = (0, 0, 0, 0)
+		spawnType = random.randint(0, 4)
+
+		if spawnType == 0:
+			# TOP LEFT
+			x = MIN_X
+			y = MAX_Y
+			xVel = random.randint(ASTEROID_VEL_MAG_MIN, ASTEROID_VEL_MAG_MAX)
+			yVel = -random.randint(ASTEROID_VEL_MAG_MIN, ASTEROID_VEL_MAG_MAX)
+
+		elif spawnType == 1:
+			# BOTTOM LEFT
+			x = MIN_X
+			y = MIN_Y
+			xVel = random.randint(ASTEROID_VEL_MAG_MIN, ASTEROID_VEL_MAG_MAX)
+			yVel = random.randint(ASTEROID_VEL_MAG_MIN, ASTEROID_VEL_MAG_MAX)
+
+		elif spawnType == 2:
+			# BOTTOM LEFT
+			x = MAX_X
+			y = MIN_Y
+			xVel = -random.randint(ASTEROID_VEL_MAG_MIN, ASTEROID_VEL_MAG_MAX)
+			yVel = random.randint(ASTEROID_VEL_MAG_MIN, ASTEROID_VEL_MAG_MAX)
+
+		elif spawnType == 3:
+			# TOP LEFT
+			x = MAX_X
+			y = MAX_Y
+			xVel = -random.randint(ASTEROID_VEL_MAG_MIN, ASTEROID_VEL_MAG_MAX)
+			yVel = -random.randint(ASTEROID_VEL_MAG_MIN, ASTEROID_VEL_MAG_MAX)
+
+
+		elif spawnType == 5:
+			# Random location
+			x = random.randint(ENEMY_SPAWN_MIN_X, ENEMY_SPAWN_MAX_X)
+			y = random.randint(ENEMY_SPAWN_MIN_Y, ENEMY_SPAWN_MAX_Y)
+			xVel = random.randint(ENEMY_SPAWN_MIN_X_VEL, ENEMY_SPAWN_MAX_X_VEL)
+			yVel = random.randint(ENEMY_SPAWN_MIN_X_VEL, ENEMY_SPAWN_MAX_X_VEL)
+		else:
+			return
+
+		radius = random.randint(ASTEROID_MIN_RADIUS, ASTEROID_MAX_RADIUS)
 
 		e = Asteroid(x, y, r=CMAX, g=CMAX, b=0, radius=radius)
 		e.xVel = xVel
@@ -258,6 +302,7 @@ def game_thread():
 						spawn_particles(e.x, e.y)
 
 			# Player-enemy collisions
+			# XXX/FIXME -- nesting hell! ahhh! cleanup, cleanup!
 			if not ship:
 				pass
 
@@ -268,14 +313,16 @@ def game_thread():
 					if e.checkCollide(ship):
 						e.destroy = True
 						spawn_particles(e.x, e.y)
-						STATE.healthbar.subtract(SHIP_HEALTH_ASTEROID_HIT)
 
-						# GAME OVER!
-						if STATE.healthbar.health <= 0:
-							ship.destroy = True
-							healthbar.destroy = True
-							spawn_particles(ship.x, ship.y)
-							print "Game Over!"
+						if not SHIP_IS_INVINCIBLE:
+							STATE.healthbar.subtract(SHIP_HEALTH_ASTEROID_HIT)
+
+							# GAME OVER!
+							if STATE.healthbar.health <= 0:
+								ship.destroy = True
+								healthbar.destroy = True
+								spawn_particles(ship.x, ship.y)
+								print "Game Over!"
 
 			numEnemies = 0
 			numBullets = 0
