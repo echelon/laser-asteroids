@@ -232,6 +232,7 @@ def game_thread():
 			# Populate lists
 			# TODO: Let's not have to continually rebuild these
 			ship = None
+			healthbar = None
 			bullets = []
 			enemies = []
 			particles = []
@@ -245,6 +246,8 @@ def game_thread():
 					bullets.append(obj)
 				elif type(obj) == Ship:
 					ship = obj
+				elif type(obj) == HealthBar:
+					healthbar = obj
 
 			# Bullet-enemy collisions
 			for b in bullets:
@@ -255,13 +258,24 @@ def game_thread():
 						spawn_particles(e.x, e.y)
 
 			# Player-enemy collisions
-			for e in enemies:
-				if e.destroy:
-					continue
-				if e.checkCollide(ship):
-					e.destroy = True
-					spawn_particles(e.x, e.y)
+			if not ship:
+				pass
 
+			else:
+				for e in enemies:
+					if e.destroy:
+						continue
+					if e.checkCollide(ship):
+						e.destroy = True
+						spawn_particles(e.x, e.y)
+						STATE.healthbar.subtract(SHIP_HEALTH_ASTEROID_HIT)
+
+						# GAME OVER!
+						if STATE.healthbar.health <= 0:
+							ship.destroy = True
+							healthbar.destroy = True
+							spawn_particles(ship.x, ship.y)
+							print "Game Over!"
 
 			numEnemies = 0
 			numBullets = 0
