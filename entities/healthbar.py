@@ -37,6 +37,10 @@ class HealthBar(Entity):
 	def subtract(self, health):
 		self.health = max(self.health - health, 0)
 
+	# XXX FIXME TODO
+	# XXX FIXME TODO -- THIS CODE IS HORRIBLE!
+	# XXX FIXME TODO
+
 	def produce(self):
 		"""
 		Generate the points of the circle.
@@ -51,15 +55,16 @@ class HealthBar(Entity):
 		green = full * hPerc
 		red = full * (1.0 - hPerc)
 
-		print hPerc, green, red
+		y = 4000
+		xShift = 200
 
 		pts = []
-		pts.append({'x': full, 'y': full})
-		pts.append({'x': -full*2 + full*3*ihPerc, 'y': full})
+		pts.append({'x': full + xShift, 'y': y})
+		pts.append({'x': -full*2 + full*3*ihPerc + xShift, 'y': y})
 
 		# RED
-		pts.append({'x': full - full*3, 'y': full})
-		pts.append({'x': -full*2, 'y': full})
+		pts.append({'x': full - full*3 + xShift, 'y': y})
+		pts.append({'x': -full*2 + xShift, 'y': y})
 		#pts.append({'x': -full*2, 'y': full})
 		#pts.append({'x': -full*2, 'y': full})
 

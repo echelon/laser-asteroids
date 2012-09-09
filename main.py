@@ -293,7 +293,6 @@ def game_thread():
 									PARTICLE_MAX_X_VEL)
 			p.yVel = random.randint(PARTICLE_MIN_Y_VEL,
 									PARTICLE_MAX_Y_VEL)
-			particles.append(p)
 			DRAW.objects.append(p)
 
 	while True:
@@ -337,7 +336,7 @@ def game_thread():
 			# Bullet-enemy collisions
 			for b in bullets:
 				for e in enemies:
-					if e.checkCollide(b):
+					if e.checkCollide(b) and not e.destroy:
 						e.destroy = True
 						b.destroy = True
 						spawn_particles(e.x, e.y)
@@ -373,6 +372,14 @@ def game_thread():
 			Handle Onscreen Objects
 			"""
 			for i in range(len(DRAW.objects)):
+
+				# XXX/FIXME/ANNOYING -- multithreaded, 
+				# sometimes 'i' disappears from list
+				# XXX -- find out where this happens and fix
+				if i >= len(DRAW.objects):
+					print "Weird out of range error at i=%d" %i
+					break
+
 				obj = DRAW.objects[i]
 
 				# PLAYER

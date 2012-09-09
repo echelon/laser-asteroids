@@ -38,6 +38,7 @@ class PointStream(object):
 			#print "POINT STREAM LOOP BEGIN"
 			curObj = None # XXX SCOPE HERE FOR DEBUG ONLY
 			nextObj = None # XXX SCOPE HERE FOR DEBUG ONLY
+
 			try:
 
 				# Generate and cache the first points of the objects.
@@ -49,6 +50,32 @@ class PointStream(object):
 
 				# Objects to destroy at end of loop
 				destroy = []
+
+
+				"""
+				# TOPOLOGICAL SORT OF OBJECTS TO MAKE DRAWING W/ 
+				# GALVOS EFFICIENT!
+				sortedObjects = []
+				presort = self.objects[:]
+				sortedObjects.append(presort.pop(0))
+				while len(presort):
+					#lowx = presort[0].x
+					lastObj = sortedObjects[-1]
+					lowdist = 10000000
+					li = 0
+					for i in range(len(presort)):
+						obj = presort[i]
+						a = obj.x - lastObj.x
+						b = obj.y - lastObj.y
+						c = math.sqrt(a**2 + b**2)
+						if c < lowdist:
+							lowdist = c
+							li = i
+					sortedObjects.append(presort.pop(li))
+
+				#sortedObjects = self.objects[:]
+				self.objects = sortedObjects # XXX XXX XXX XXX TURN OFF HERE
+				"""
 
 				# Draw all the objects... 
 				for i in range(len(self.objects)):
