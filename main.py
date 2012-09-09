@@ -41,6 +41,7 @@ class GameState(object):
 		self.healthbar = None
 		self.bullets = []
 		self.asteroids = []
+		self.gameOver = False
 
 STATE = GameState()
 
@@ -296,7 +297,7 @@ def game_thread():
 			if numEnemies < MAX_NUM_ENEMIES and random.randint(0, 5) == 0:
 				spawn_enemy()
 
-			if numBullets < MAX_NUM_BULLETS:
+			if not STATE.gameOver and numBullets < MAX_NUM_BULLETS:
 				bulletSpawnOk = True
 			else:
 				bulletSpawnOk = False
@@ -354,6 +355,7 @@ def game_thread():
 								ship.destroy = True
 								healthbar.destroy = True
 								spawn_particles(ship.x, ship.y)
+								STATE.gameOver = True
 								print "Game Over!"
 
 			numEnemies = 0
