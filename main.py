@@ -7,6 +7,7 @@ import itertools
 import sys
 import thread
 import time
+from datetime import datetime, timedelta
 
 # PYGAME
 import pygame
@@ -19,6 +20,7 @@ from colors import *
 from entities.ship import *
 from entities.healthbar import *
 from entities.asteroid import *
+from entities.asteroidExplode import *
 from entities.bullet import *
 from pointstream import PointStream
 
@@ -63,8 +65,7 @@ class Player(object):
 
 		# Player Object
 		self.obj = Ship(0, 0, r=rgb[0], g=rgb[1], b=rgb[2], radius=radius/2)
-		self.healthbar = HealthBar(HEALTHBAR_X_POS, HEALTHBAR_Y_POS,
-				r=0, g=CMAX, b=0, radius=radius/2)
+		self.healthbar = HealthBar(0, 0, r=0, g=CMAX, b=0, radius=radius/2)
 
 		DRAW.objects.append(self.obj)
 		DRAW.objects.append(self.healthbar)
@@ -125,6 +126,7 @@ def joystick_thread():
 	PLAYERS.append(p1)
 
 	numButtons = p1.js.get_numbuttons() # XXX NO!
+	bulletLastFired = datetime.now()
 
 	while True:
 		e = pygame.event.get()
@@ -153,14 +155,21 @@ def joystick_thread():
 			t = math.atan2(lVert, lHori)
 			p.obj.theta = t
 
+			# Health Bar Location
+			STATE.healthbar.x = p.obj.x
+			STATE.healthbar.y = p.obj.y - 2500
+
 			# Firing the weapon (Left Trigger)
 			trigger = False if p.js.get_axis(2) in [0.0, -1.0] else True
 
 			if bulletSpawnOk and trigger:
-				ang = p.obj.theta + math.pi
-				b = Bullet(p.obj.x, p.obj.y, rgb=COLOR_YELLOW, shotAngle=ang)
-				DRAW.objects.append(b)
-				STATE.bullets.append(b)
+				td = timedelta(milliseconds=150) # TODO: Cache this.
+				if datetime.now() > bulletLastFired + td:
+					ang = p.obj.theta + math.pi
+					b = Bullet(p.obj.x, p.obj.y, rgb=COLOR_YELLOW, shotAngle=ang)
+					DRAW.objects.append(b)
+					STATE.bullets.append(b)
+					bulletLastFired = datetime.now()
 
 		time.sleep(0.02) # Keep this thread from hogging CPU
 
@@ -212,10 +221,13 @@ def game_thread():
 			ship = None
 			bullets = []
 			enemies = []
+			particles = []
 
 			for obj in DRAW.objects:
 				if type(obj) == Enemy:
 					enemies.append(obj)
+				elif type(obj) == Particle:
+					particles.append(obj)
 				elif type(obj) == Bullet:
 					bullets.append(obj)
 				elif type(obj) == Ship:
@@ -227,6 +239,14 @@ def game_thread():
 					if e.checkCollide(b):
 						e.destroy = True
 						print "COLLIDE"
+						# Spawn explosion particles
+						for i in range(random.randint(3, 6)):
+							p = Particle(e.x, e.y, CMAX, CMAX, CMAX)
+							p.xVel = random.randint(-1000, 1000)
+							p.yVel = random.randint(-1000, 1000)
+							particles.append(p)
+							DRAW.objects.append(p)
+
 
 			"""
 			checkCollision = DRAW.objects[:]
@@ -277,6 +297,22 @@ def game_thread():
 					obj.x = x
 					obj.y = y
 
+				elif type(obj) == Particle:
+					x = obj.x
+					y = obj.y
+					x += obj.xVel
+					y += obj.yVel
+
+					if x < MIN_X or x > MAX_X or y < MIN_Y or y > MAX_Y :
+						obj.destroy = True
+						continue
+					obj.x = x
+					obj.y = y
+
+					obj.life -= 1
+					if obj.life <= 0:
+						obj.destroy = True
+						continue
 
 			time.sleep(0.02)
 

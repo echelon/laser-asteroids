@@ -1,5 +1,5 @@
 """
-Player's health bar
+Exploded Asteroid Entity
 	TODO: DOC
 """
 
@@ -18,21 +18,33 @@ from globalvals import *
 # Base class
 from entity import Entity
 
-class HealthBar(Entity):
+class Particle(Entity):
+	def __init__(self, x=0, y=0, r=0, g=0, b=0):
+		super(Particle, self).__init__(x, y, r, g, b)
+		self.radius = 1
+		self.drawn = False
+		self.pauseFirst = True
+		self.pauseLast = True
 
-	HEALTH_MAX = SHIP_HEALTH_MAX
+		# Particle Duration
+		self.life = 20
+		self.xVel = 0
+		self.yVel = 0
 
+	def produce(self):
+		for i in range(20):
+			yield (self.x, self.y, self.r, self.g, self.b)
+
+class AsteroidExplode(Entity):
 	def __init__(self, x = 0, y = 0, r = 0, g = 0, b = 0, radius = 1200):
-		super(HealthBar, self).__init__(x, y, r, g, b)
+		super(AsteroidExplode, self).__init__(x, y, r, g, b)
 		self.radius = radius
 		self.drawn = False
 
 		self.pauseFirst = True
 		self.pauseLast = True
 
-		self.skipDraw = False
-
-		self.health = HealthBar.HEALTH_MAX
+		self.theta = 0
 
 	def produce(self):
 		"""
@@ -42,12 +54,6 @@ class HealthBar(Entity):
 
 		# Generate points
 		ed = self.radius/2
-
-		pts = []
-		pts.append({'x': ed, 'y': ed})
-		pts.append({'x': -ed*2, 'y': ed})
-		#pts.append({'x': -ed*8, 'y': -ed})
-		#pts.append({'x': ed*8, 'y': -ed})
 
 		# Translate points
 		for pt in pts:
@@ -73,20 +79,29 @@ class HealthBar(Entity):
 
 		p = None # Save in scope
 
-		for p in make_line(pts[0], pts[1], HEALTHBAR_EDGE_SAMPLE_PTS):
+		for p in make_line(pts[0], pts[1], SQUARE_EDGE_SAMPLE_PTS):
 			break
-		for i in range(int(round(HEALTHBAR_VERTEX_SAMPLE_PTS/2.0))):
+		for i in range(int(round(SQUARE_VERTEX_SAMPLE_PTS/2.0))):
 			yield p
-		for p in make_line(pts[0], pts[1], HEALTHBAR_EDGE_SAMPLE_PTS):
+		for p in make_line(pts[0], pts[1], SQUARE_EDGE_SAMPLE_PTS):
 			yield p
-		for i in range(HEALTHBAR_VERTEX_SAMPLE_PTS):
+		for i in range(SQUARE_VERTEX_SAMPLE_PTS):
 			yield p
-		for p in make_line(pts[1], pts[0], HEALTHBAR_EDGE_SAMPLE_PTS):
+		for p in make_line(pts[1], pts[2], SQUARE_EDGE_SAMPLE_PTS):
+			yield p
+		for i in range(SQUARE_VERTEX_SAMPLE_PTS):
+			yield p
+		for p in make_line(pts[2], pts[3], SQUARE_EDGE_SAMPLE_PTS):
+			yield p
+		for i in range(SQUARE_VERTEX_SAMPLE_PTS):
+			yield p
+		for p in make_line(pts[3], pts[0], SQUARE_EDGE_SAMPLE_PTS):
 			self.lastPt = p # KEEP BOTH
 			yield p
-		for i in range(int(round(HEALTHBAR_VERTEX_SAMPLE_PTS/2.0))):
+		for i in range(int(round(SQUARE_VERTEX_SAMPLE_PTS/2.0))):
 			self.lastPt = p # KEEP BOTH
 			yield p
 
 		self.drawn = True
+
 

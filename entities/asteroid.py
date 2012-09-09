@@ -19,7 +19,7 @@ from globalvals import *
 from entity import Entity
 
 class Enemy(Entity):
-	def __init__(self, x = 0, y = 0, r = 0, g = 0, b = 0, radius = 1200):
+	def __init__(self, x = 0, y = 0, r = 0, g = 0, b = 0, radius = 8200):
 		super(Enemy, self).__init__(x, y, r, g, b)
 		self.radius = radius
 		self.drawn = False
@@ -29,6 +29,8 @@ class Enemy(Entity):
 
 		self.theta = 0
 
+
+
 	def produce(self):
 		"""
 		Generate the points of the circle.
@@ -36,7 +38,7 @@ class Enemy(Entity):
 		r, g, b = (0, 0, 0)
 
 		# Generate points
-		ed = self.radius/2
+		ed = self.radius*2
 
 		pts = []
 		pts.append({'x': ed, 'y': ed})

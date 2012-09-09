@@ -40,6 +40,7 @@ class Entity(object):
 		self.g = g
 		self.b = b
 		self.doBlanking = True # object should get blanking? 
+		self.skipDraw = False
 
 		# Collision and deallocation
 		self.collides = True
