@@ -20,7 +20,13 @@ from entity import Entity
 
 class Ship(Entity):
 
-	def __init__(self, x = 0, y = 0, r = 0, g = 0, b = 0, radius = 1200):
+	def __init__(self, x = 0, y = 0, r = 0, g = 0, b = 0, rgb=None, radius = 1200):
+
+		if rgb:
+			r = rgb[0]
+			g = rgb[1]
+			b = rgb[2]
+
 		super(Ship, self).__init__(x, y, r, g, b)
 		self.radius = radius
 		self.drawn = False

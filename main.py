@@ -72,16 +72,6 @@ class Player(object):
 		print joystick.get_name()
 		print numButtons
 
-		# Player Object
-		self.obj = Ship(0, 0, r=rgb[0], g=rgb[1], b=rgb[2], radius=SHIP_SIZE)
-		self.healthbar = HealthBar(0, 0, r=0, g=CMAX, b=0, radius=radius/2)
-
-		DRAW.objects.append(self.obj)
-		DRAW.objects.append(self.healthbar)
-
-		STATE.ship = self.obj
-		STATE.healthbar = self.healthbar
-
 	def __str__(self):
 		return self.js.get_name()
 
@@ -89,13 +79,14 @@ class Player(object):
 THREADS
 """
 
+ps = PointStream()
+DRAW = ps
+
 def dac_thread():
 	global PLAYERS, DRAW
 
 	while True:
 		try:
-			ps = PointStream()
-			DRAW = ps
 
 			d = dac.DAC(dac.find_first_dac())
 			d.play_stream(ps)
@@ -109,12 +100,6 @@ def dac_thread():
 			traceback.print_tb(sys.exc_info()[2])
 			print "\n"
 			pass
-
-			# In case we went off edge, recenter. 
-			# XXX: This is just laziness
-			for p in PLAYERS:
-				p.obj.x = 0
-				p.obj.y = 0
 
 def joystick_thread():
 	"""Manage the joysticks with PyGame"""
@@ -131,9 +116,6 @@ def joystick_thread():
 	p1 = Player(pygame.joystick.Joystick(0),
 			rgb = COLOR_PINK)
 
-	p1.obj.x = (MIN_X + MAX_X) /2
-	p1.obj.y = (MAX_Y - MIN_Y) /2
-
 	PLAYERS.append(p1)
 
 	numButtons = p1.js.get_numbuttons() # XXX NO!
@@ -141,6 +123,7 @@ def joystick_thread():
 
 	# Bullet color increment
 	colors = [COLOR_GREEN, COLOR_RED, COLOR_BLUE, COLOR_YELLOW]
+	ship = STATE.ship
 	ci = 0
 
 	while True:
@@ -155,24 +138,24 @@ def joystick_thread():
 			rHori= p.js.get_axis(3)
 
 			if abs(rVert) > 0.2:
-				y = p.obj.y
+				y = ship.y
 				y += -1 * int(rVert * SIMPLE_TRANSLATION_SPD)
 				if MIN_Y < y < MAX_Y:
-					p.obj.y = y
+					ship.y = y
 
 			if abs(rHori) > 0.2:
-				x = p.obj.x
+				x = ship.x
 				x += -1 * int(rHori * SIMPLE_TRANSLATION_SPD)
 				if MIN_X < x < MAX_X:
-					p.obj.x = x
+					ship.x = x
 
 			# Player rotation
 			t = math.atan2(lVert, lHori)
-			p.obj.theta = t
+			ship.theta = t
 
 			# Health Bar Location
-			STATE.healthbar.x = p.obj.x
-			STATE.healthbar.y = p.obj.y - 2500
+			STATE.healthbar.x = ship.x
+			STATE.healthbar.y = ship.y - 2500
 
 			# Firing the weapon (Left Trigger)
 			tOff = [0.0, -1.0]
@@ -185,11 +168,11 @@ def joystick_thread():
 			if bulletSpawnOk and trigger:
 				td = timedelta(milliseconds=150) # TODO: Cache this.
 				if datetime.now() > bulletLastFired + td:
-					ang = p.obj.theta + math.pi
+					ang = ship.theta + math.pi
 
 					ci = (ci+1) % len(colors)
 					color = colors[ci]
-					b = Bullet(p.obj.x, p.obj.y, rgb=color, shotAngle=ang)
+					b = Bullet(ship.x, ship.y, rgb=color, shotAngle=ang)
 					DRAW.objects.append(b)
 					STATE.bullets.append(b)
 					bulletLastFired = datetime.now()
@@ -279,7 +262,11 @@ def game_thread():
 		e = Asteroid(x, y, r=CMAX, g=CMAX, b=0, radius=radius)
 		e.xVel = xVel
 		e.yVel = yVel
-		e.thetaRate = random.uniform(-math.pi/100, math.pi/100)
+		#e.thetaRate = random.uniform(-math.pi/100, math.pi/100)
+
+		e.thetaRate = random.uniform(ASTEROID_SPIN_VEL_MAG_MIN,
+									ASTEROID_SPIN_VEL_MAG_MAX)
+		e.thetaRate *= 1 if random.randint(0, 1) else -1
 
 		DRAW.objects.append(e)
 		STATE.asteroids.append(e)
@@ -295,6 +282,21 @@ def game_thread():
 									PARTICLE_MAX_Y_VEL)
 			DRAW.objects.append(p)
 
+	# Player Object
+	ship = Ship(0, 0, rgb=COLOR_PINK, radius=SHIP_SIZE)
+	healthbar = HealthBar(0, 0, r=0, g=CMAX, b=0, radius=BALL_RADIUS/2)
+
+	ship.x = (MIN_X + MAX_X) /2
+	ship.y = (MAX_Y - MIN_Y) /2
+
+	DRAW.objects.append(ship)
+	DRAW.objects.append(healthbar)
+
+	STATE.ship = ship
+	STATE.healthbar = healthbar
+
+	thread.start_new_thread(joystick_thread, ())
+
 	while True:
 		try:
 
@@ -309,6 +311,10 @@ def game_thread():
 			else:
 				bulletSpawnOk = False
 
+			if STATE.gameOver and random.randint(0, 20) == 0:
+				x = random.randint(MIN_X, MAX_X)
+				y = random.randint(MIN_Y, MAX_Y)
+				spawn_particles(x, y)
 
 			"""
 			Collision Detection
@@ -445,7 +451,6 @@ def game_thread():
 
 thread.start_new_thread(dac_thread, ())
 thread.start_new_thread(game_thread, ())
-thread.start_new_thread(joystick_thread, ())
 
 """
 UNUSED STUFF
