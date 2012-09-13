@@ -31,6 +31,7 @@ from entities.asteroid import *
 from entities.particle import *
 from entities.bullet import *
 from pointstream import PointStream
+from controller import setup_controls
 
 """
 Main Program
@@ -70,6 +71,7 @@ class Player(object):
 		# debug
 		numButtons = joystick.get_numbuttons()
 		print joystick.get_name()
+		print joystick.get_numaxes()
 		print numButtons
 
 	def __str__(self):
@@ -121,6 +123,9 @@ def joystick_thread():
 	numButtons = p1.js.get_numbuttons() # XXX NO!
 	bulletLastFired = datetime.now()
 
+	# Controller wrapper (Xbox, PS3, etc.)
+	controller = setup_controls(p1.js)
+
 	# Bullet color increment
 	colors = [COLOR_GREEN, COLOR_RED, COLOR_BLUE, COLOR_YELLOW]
 	ship = STATE.ship
@@ -130,12 +135,12 @@ def joystick_thread():
 		e = pygame.event.get()
 
 		for p in PLAYERS:
+			lVert, lHori, rVert, rHori = (0, 0, 0, 0)
 
-			# Joysticks 
-			lVert = p.js.get_axis(1)
-			lHori= p.js.get_axis(0)
-			rVert = p.js.get_axis(4)
-			rHori= p.js.get_axis(3)
+			lVert = controller.getLeftVert()
+			lHori = controller.getLeftHori()
+			rVert = controller.getRightVert()
+			rHori = controller.getRightHori()
 
 			if abs(rVert) > 0.2:
 				y = ship.y
@@ -157,13 +162,12 @@ def joystick_thread():
 			STATE.healthbar.x = ship.x
 			STATE.healthbar.y = ship.y - 2500
 
-			# Firing the weapon (Left Trigger)
+			# Both triggers shoot
 			tOff = [0.0, -1.0]
 			trigger = True
-			if p.js.get_axis(2) in tOff and p.js.get_axis(5) in tOff:
+			if controller.getLeftTrigger() in tOff and \
+					controller.getRightTrigger() in tOff:
 				trigger = False
-
-			#trigger = False if p.js.get_axis(2) in [0.0, -1.0] else True
 
 			if bulletSpawnOk and trigger:
 				td = timedelta(milliseconds=150) # TODO: Cache this.
