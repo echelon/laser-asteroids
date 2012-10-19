@@ -60,7 +60,8 @@ class Player(object):
 		- Contain joystick ref
 		- Contain visual object
 	"""
-	def __init__(self, joystick, radius=BALL_RADIUS, rgb=(CMAX, CMAX, CMAX)):
+	def __init__(self, joystick, radius=BALL_RADIUS,
+			rgb=(CMAX, CMAX, CMAX)):
 		self.js = joystick
 		self.score = 0
 		self.pid = 0
@@ -111,9 +112,11 @@ def joystick_thread():
 	pygame.joystick.init()
 	pygame.display.init()
 
-	if not pygame.joystick.get_count():
+	# Wait until we have a joystick
+	# TODO: Doesn't account for unplugged. 
+	while not pygame.joystick.get_count():
 		print "No Joystick detected!"
-		sys.exit()
+		time.sleep(5)
 
 	p1 = Player(pygame.joystick.Joystick(0),
 			rgb = COLOR_PINK)
@@ -165,6 +168,7 @@ def joystick_thread():
 			# Both triggers shoot
 			tOff = [0.0, -1.0]
 			trigger = True
+
 			if controller.getLeftTrigger() in tOff and \
 					controller.getRightTrigger() in tOff:
 				trigger = False
@@ -290,8 +294,11 @@ def game_thread():
 	ship = Ship(0, 0, rgb=COLOR_PINK, radius=SHIP_SIZE)
 	healthbar = HealthBar(0, 0, r=0, g=CMAX, b=0, radius=BALL_RADIUS/2)
 
+	# Initial placement
 	ship.x = (MIN_X + MAX_X) /2
 	ship.y = (MAX_Y - MIN_Y) /2
+	healthbar.x = ship.x
+	healthbar.y = ship.y - 2500
 
 	DRAW.objects.append(ship)
 	DRAW.objects.append(healthbar)
@@ -461,6 +468,6 @@ UNUSED STUFF
 """
 
 while True:
-	time.sleep(200)
+	time.sleep(20000000)
 
 
