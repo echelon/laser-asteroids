@@ -1,8 +1,6 @@
 Laser Asteroids
 ===============
-![Laser Asteroids Photo](http://img.youtube.com/vi/5XTi-jf-ans/1.jpg)
-![Laser Asteroids Photo](http://img.youtube.com/vi/5XTi-jf-ans/2.jpg)
-![Laser Asteroids Photo](http://img.youtube.com/vi/5XTi-jf-ans/3.jpg)
+![Laser Asteroids Photo](http://img.youtube.com/vi/5XTi-jf-ans/0.jpg)
 
 Programmed for the 2012 [Georgia Game Jam](http://www.spsu.edu/games/gamejam/), 
 Laser Asteroids utilizes the [Ether Dream](http://www.ether-dream.com/) 
