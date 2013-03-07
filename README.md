@@ -1,5 +1,7 @@
 Laser Asteroids
 ===============
+[http://img.youtube.com/vi/5XTi-jf-ans/0.jpg](http://youtube.com/watch?v=5XTi-jf-ans)
+
 Programmed for the 2012 [Georgia Game Jam](http://www.spsu.edu/games/gamejam/), 
 Laser Asteroids utilizes the [Ether Dream](http://www.ether-dream.com/) 
 DAC for laser projectors in order to project a game inspired by *Asteroids* onto 
