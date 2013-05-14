@@ -1,6 +1,6 @@
 Laser Asteroids
 ===============
-![Laser Asteroids Photo](http://img.youtube.com/vi/5XTi-jf-ans/0.jpg)
+[![Laser Asteroids Video](http://img.youtube.com/vi/5XTi-jf-ans/0.jpg)](http://youtu.be/5XTi-jf-ans)
 
 Programmed for the 2012 [Georgia Game Jam](http://www.spsu.edu/games/gamejam/), 
 Laser Asteroids utilizes the [Ether Dream](http://www.ether-dream.com/) 
@@ -10,8 +10,6 @@ a surface of choice.
 This game was developed on a 30Kpps Laser Projector, and I'm anxious to see
 if it runs on any other setups. Any owners of the Ether Dream DAC are encouraged
 to try the game and send me feedback. Patches are also welcome.
-
-See the **[Laser Asteroids Video](http://youtube.com/watch?v=5XTi-jf-ans)** on Youtube.
 
 Libraries, etc. 
 ---------------
