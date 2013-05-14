@@ -25,3 +25,16 @@ License
 -------
 Laser Asteroids is available under the MIT license. 
 
+My other beginner laser projects 
+--------------------------------
+* [Laser Testbed](https://github.com/echelon/laser-testbed), 
+  misc experiments including OpenCV, Graffiti Markup Language, 
+  and more.
+* [Laser Client](https://github.com/echelon/laser-client), 
+  simple object shows that can cycle. Some parts are shared with 
+  Laser Testbed, and much needs to be backported.
+
+More sophisticated laser projects
+---------------------------------
+* [Light Engine](https://github.com/echelon/light-engine), a C++
+  library for advanced laser projecting. Currently a work in progress.
